@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lista de Tarefas Interativa</title>
+  <style>
+    /* Reset básico e tipografia */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+    }
+
+    body {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(145deg, #f6f9fc 0%, #e3e9f2 100%);
+      padding: 1rem;
+    }
+
+    .app-container {
+      width: 100%;
+      max-width: 520px;
+      background: #ffffff;
+      border-radius: 2rem;
+      box-shadow: 0 20px 30px rgba(0, 0, 0, 0.05), 0 8px 12px rgba(0, 0, 0, 0.1);
+      padding: 2rem 1.5rem;
+      transition: all 0.2s;
+    }
+
+    h1 {
+      font-size: 1.8rem;
+      font-weight: 600;
+      color: #1e2b3c;
+      letter-spacing: -0.02em;
+      margin-bottom: 0.25rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    h1 span {
+      background: #1e2b3c;
+      color: white;
+      font-size: 1rem;
+      padding: 0.2rem 0.8rem;
+      border-radius: 2rem;
+      font-weight: 500;
+    }
+
+    .subhead {
+      color: #5b6f88;
+      font-size: 0.9rem;
+      margin-bottom: 1.8rem;
+      border-left: 4px solid #b0c7e0;
+      padding-left: 0.75rem;
+    }
+
+    /* Área de entrada */
+    .input-group {
+      display: flex;
+      gap: 0.75rem;
+      margin-bottom: 2rem;
+      flex-wrap: wrap;
+    }
+
+    #taskInput {
+      flex: 1;
+      padding: 0.9rem 1.2rem;
+      border: 2px solid #dbe4ed;
+      border-radius: 3rem;
+      font-size: 1rem;
+      outline: none;
+      transition: border 0.2s, box-shadow 0.2s;
+      background: #fbfdff;
+    }
+
+    #taskInput:focus {
+      border-color: #8aa9c9;
+      box-shadow: 0 0 0 4px rgba(138, 169, 201, 0.15);
+    }
+
+    #addBtn {
+      background: #1e2b3c;
+      color: white;
+      border: none;
+      border-radius: 3rem;
+      font-weight: 600;
+      padding: 0.9rem 1.6rem;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.1s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.4rem;
+      box-shadow: 0 6px 10px rgba(30, 43, 60, 0.15);
+      white-space: nowrap;
+    }
+
+    #addBtn:hover {
+      background: #2c3e54;
+    }
+
+    #addBtn:active {
+      transform: scale(0.97);
+    }
+
+    /* Aviso de tarefa vazia */
+    .warning-message {
+      background: #ffecf0;
+      color: #b13e4b;
+      padding: 0.75rem 1rem;
+      border-radius: 2rem;
+      font-size: 0.9rem;
+      font-weight: 500;
+      margin-bottom: 1.5rem;
+      border-left: 5px solid #d14c5e;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      transition: opacity 0.2s;
+    }
+
+    .warning-message.hidden {
+      display: none;
+    }
+
+    /* Contador */
+    .counter-area {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 1.2rem;
+      font-size: 0.95rem;
+      color: #2f4055;
+      background: #f0f5fb;
+      padding: 0.6rem 1rem;
+      border-radius: 2rem;
+    }
+
+    .counter-text {
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 0.3rem;
+    }
+
+    .counter-text strong {
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: #1e2b3c;
+      margin-right: 0.1rem;
+    }
+
+    /* Lista de tarefas */
+    .task-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      margin-bottom: 1.5rem;
+      max-height: 380px;
+      overflow-y: auto;
+      padding-right: 0.2rem;
+    }
+
+    /* Scrollbar estilizada */
+    .task-list::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    .task-list::-webkit-scrollbar-track {
+      background: #eef2f6;
+      border-radius: 10px;
+    }
+
+    .task-list::-webkit-scrollbar-thumb {
+      background: #bccbd9;
+      border-radius: 10px;
+    }
+
+    .task-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: #ffffff;
+      border: 1.5px solid #e3eaf2;
+      border-radius: 3rem;
+      padding: 0.3rem 0.3rem 0.3rem 1.2rem;
+      transition: all 0.2s;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.02);
+    }
+
+    .task-item:hover {
+      border-color: #bacddc;
+      background: #f9fcff;
+    }
+
+    .task-text {
+      flex: 1;
+      font-size: 1rem;
+      color: #1e2b3c;
+      cursor: pointer;
+      padding: 0.7rem 0;
+      word-break: break-word;
+      transition: color 0.2s, text-decoration 0.2s;
+      user-select: none;
+    }
+
+    /* Tarefa concluída */
+    .task-item.completed .task-text {
+      text-decoration: line-through;
+      color: #8a9aab;
+    }
+
+    .task-item.completed {
+      background: #f4f8fe;
+      border-color: #d2e0ed;
+    }
+
+    /* Botão remover */
+    .remove-btn {
+      background: transparent;
+      border: none;
+      width: 2.8rem;
+      height: 2.8rem;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.4rem;
+      line-height: 1;
+      color: #9aabbc;
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s, transform 0.1s;
+      flex-shrink: 0;
+      margin-left: 0.2rem;
+    }
+
+    .remove-btn:hover {
+      background: #ffe6ea;
+      color: #c43b4e;
+    }
+
+    .remove-btn:active {
+      transform: scale(0.92);
+    }
+
+    /* Estado vazio */
+    .empty-message {
+      text-align: center;
+      padding: 2.5rem 1rem;
+      background: #f8fbfe;
+      border-radius: 2rem;
+      color: #6b7f94;
+      font-style: italic;
+      font-size: 1rem;
+      border: 1.5px dashed #cad8e6;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .empty-message span {
+      font-size: 2rem;
+      opacity: 0.7;
+    }
+
+    /* Esconde elementos */
+    .hidden {
+      display: none !important;
+    }
+
+    /* Layout responsivo */
+    @media (max-width: 450px) {
+      .app-container {
+        padding: 1.5rem 1rem;
+        border-radius: 1.5rem;
+      }
+
+      h1 {
+        font-size: 1.5rem;
+      }
+
+      .input-group {
+        flex-direction: column;
+      }
+
+      #addBtn {
+        justify-content: center;
+        padding: 0.9rem;
+      }
+
+      .task-item {
+        padding-left: 1rem;
+      }
+
+      .remove-btn {
+        width: 2.5rem;
+        height: 2.5rem;
+        font-size: 1.2rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app-container">
+    <h1>
+      Tarefas
+      <span id="taskCountBadge">0</span>
+    </h1>
+    <div class="subhead">Organize seu dia</div>
+
+    <!-- Área de aviso (tarefa vazia) -->
+    <div id="warningMessage" class="warning-message hidden">
+      ⚠️ Digite uma tarefa antes de adicionar.
+    </div>
+
+    <!-- Campo de entrada e botão -->
+    <div class="input-group">
+      <input type="text" id="taskInput" placeholder="Nova tarefa..." autocomplete="off" aria-label="Nova tarefa">
+      <button id="addBtn">➕ Adicionar</button>
+    </div>
+
+    <!-- Contador X de Y -->
+    <div class="counter-area">
+      <div class="counter-text">
+        <strong id="completedCount">0</strong> de <strong id="totalCount">0</strong> tarefas concluídas
+      </div>
+    </div>
+
+    <!-- Lista de tarefas (UL) -->
+    <ul id="taskList" class="task-list"></ul>
+
+    <!-- Mensagem de estado vazio -->
+    <div id="emptyMessage" class="empty-message">
+      <span>📋</span>
+      Nenhuma tarefa cadastrada
+    </div>
+  </div>
+
+  <script>
+    (function() {
+      // ===== ESTADO =====
+      let tasks = []; // array de objetos: { id, text, completed }
+
+      // ===== ELEMENTOS DO DOM =====
+      const taskInput = document.getElementById('taskInput');
+      const addBtn = document.getElementById('addBtn');
+      const taskList = document.getElementById('taskList');
+      const warningMessage = document.getElementById('warningMessage');
+      const completedCountSpan = document.getElementById('completedCount');
+      const totalCountSpan = document.getElementById('totalCount');
+      const taskCountBadge = document.getElementById('taskCountBadge');
+      const emptyMessage = document.getElementById('emptyMessage');
+
+      // ===== FUNÇÕES AUXILIARES =====
+
+      // Gera ID único simples
+      function generateId() {
+        return Date.now() + '-' + Math.random().toString(36).substr(2, 9);
+      }
+
+      // Atualiza contadores e visibilidade dos elementos
+      function updateStatsAndUI() {
+        const total = tasks.length;
+        const completed = tasks.filter(task => task.completed).length;
+
+        // Atualiza contadores
+        totalCountSpan.textContent = total;
+        completedCountSpan.textContent = completed;
+
+        // Badge com número total (opcional)
+        taskCountBadge.textContent = total;
+
+        // Mostrar ou esconder mensagem de estado vazio
+        if (total === 0) {
+          emptyMessage.classList.remove('hidden');
+          taskList.classList.add('hidden'); // esconde a UL quando vazia (mas a UL existe)
+        } else {
+          emptyMessage.classList.add('hidden');
+          taskList.classList.remove('hidden');
+        }
+      }
+
+      // Esconde aviso após um tempo
+      let warningTimeout = null;
+      function showWarning(message = '⚠️ Digite uma tarefa antes de adicionar.') {
+        warningMessage.textContent = message;
+        warningMessage.classList.remove('hidden');
+
+        if (warningTimeout) {
+          clearTimeout(warningTimeout);
+        }
+        warningTimeout = setTimeout(() => {
+          warningMessage.classList.add('hidden');
+        }, 3000);
+      }
+
+      // ===== RENDERIZAÇÃO DA LISTA =====
+      function renderTasks() {
+        // Limpa a lista atual
+        taskList.innerHTML = '';
+
+        // Se não houver tarefas, o emptyMessage aparece via updateStatsAndUI
+        if (tasks.length === 0) {
+          updateStatsAndUI();
+          return;
+        }
+
+        // Cria cada item da lista dinamicamente
+        tasks.forEach(task => {
+          // <li class="task-item"> ou <li class="task-item completed">
+          const li = document.createElement('li');
+          li.className = 'task-item';
+          if (task.completed) {
+            li.classList.add('completed');
+          }
+          li.dataset.id = task.id; // armazena o id no atributo data-id
+
+          // <span class="task-text">Texto da tarefa</span>
+          const span = document.createElement('span');
+          span.className = 'task-text';
+          span.textContent = task.text;
+          // O clique no texto será tratado pelo event listener do li (delegação)
+          // mas podemos adicionar um evento diretamente? Sim, mas usaremos delegação no UL.
+
+          // <button class="remove-btn" title="Remover tarefa">🗑️</button>
+          const removeBtn = document.createElement('button');
+          removeBtn.className = 'remove-btn';
+          removeBtn.setAttribute('aria-label', 'Remover tarefa');
+          removeBtn.innerHTML = '🗑️'; // emoji de lixeira
+
+          // Monta o item
+          li.appendChild(span);
+          li.appendChild(removeBtn);
+
+          // Adiciona o item à lista
+          taskList.appendChild(li);
+        });
+
+        // Atualiza contadores e visibilidade
+        updateStatsAndUI();
+      }
+
+      // ===== ADICIONAR TAREFA =====
+      function addTask() {
+        const text = taskInput.value.trim();
+
+        // Validação: bloquear tarefa vazia e mostrar aviso (sem alert)
+        if (text === '') {
+          showWarning('⚠️ Por favor, digite uma tarefa válida.');
+          return;
+        }
+
+        // Cria nova tarefa
+        const newTask = {
+          id: generateId(),
+          text: text,
+          completed: false,
+        };
+
+        tasks.push(newTask);
+
+        // Limpa o input
+        taskInput.value = '';
+        taskInput.focus();
+
+        // Esconde qualquer aviso pendente
+        warningMessage.classList.add('hidden');
+        if (warningTimeout) {
+          clearTimeout(warningTimeout);
+          warningTimeout = null;
+        }
+
+        // Re-renderiza a lista
+        renderTasks();
+      }
+
+      // ===== MARCAR TAREFA COMO CONCLUÍDA / REMOVER =====
+      // Usamos delegação de eventos no UL para tratar cliques no texto e no botão remover.
+
+      function handleTaskListClick(event) {
+        const target = event.target;
+
+        // Encontra o <li> pai mais próximo (caso clique no span ou no botão)
+        const li = target.closest('.task-item');
+        if (!li) return;
+
+        const taskId = li.dataset.id;
+        const taskIndex = tasks.findIndex(t => t.id === taskId);
+        if (taskIndex === -1) return;
+
+        // Se clicou no botão de remover
+        if (target.classList.contains('remove-btn')) {
+          // Remove a tarefa do array
+          tasks.splice(taskIndex, 1);
+          renderTasks();
+          return;
+        }
+
+        // Se clicou no texto (ou em qualquer parte que não seja o botão)
+        // Vamos considerar que o clique no texto (span) ou no próprio li (fora do botão) 
+        // alterna o status de concluído. Mas o botão tem prioridade.
+        if (target.classList.contains('task-text') || target === li) {
+          // Alterna o status de concluído
+          tasks[taskIndex].completed = !tasks[taskIndex].completed;
+          renderTasks();
+        }
+      }
+
+      // ===== EVENT LISTENERS =====
+
+      // 1. Botão adicionar
+      addBtn.addEventListener('click', addTask);
+
+      // 2. Pressionar Enter no input também adiciona
+      taskInput.addEventListener('keypress', (event) => {
+        if (event.key === 'Enter') {
+          event.preventDefault(); // evita comportamento padrão (se houver)
+          addTask();
+        }
+      });
+
+      // 3. Delegação de eventos na lista (marcar como concluída e remover)
+      taskList.addEventListener('click', handleTaskListClick);
+
+      // 4. Esconder aviso ao digitar algo no input (melhora a UX)
+      taskInput.addEventListener('input', () => {
+        if (!warningMessage.classList.contains('hidden')) {
+          warningMessage.classList.add('hidden');
+          if (warningTimeout) {
+            clearTimeout(warningTimeout);
+            warningTimeout = null;
+          }
+        }
+      });
+
+      // ===== INICIALIZAÇÃO =====
+      // Garante que a lista comece vazia e mostre o estado vazio
+      renderTasks();
+
+      // Foco inicial no input
+      taskInput.focus();
+
+    })();
+  </script>
+</body>
+</html>
